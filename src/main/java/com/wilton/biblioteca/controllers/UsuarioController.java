@@ -29,6 +29,8 @@ public class UsuarioController extends BaseController{
         return sucess(service.pegarLivroEmprestado(requestDto));
     }
 
+
+
     @GetMapping("/lista_de_emprestimo")
     public ResponseEntity<List<BaseResponseDto>> listaEmprestimoDoUsuario(@Valid @RequestBody EmprestimoListRequestDto requestDto){
         return listSucess(service.listDeEmprestimosDoUsuario(requestDto));

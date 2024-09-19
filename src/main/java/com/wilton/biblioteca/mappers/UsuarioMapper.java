@@ -1,10 +1,8 @@
 package com.wilton.biblioteca.mappers;
 
-import com.wilton.biblioteca.dtos.EmprestimoListResponseDto;
-import com.wilton.biblioteca.dtos.EmprestimoResponseDto;
-import com.wilton.biblioteca.dtos.UsuarioRequestDto;
-import com.wilton.biblioteca.dtos.UsuarioResponseDto;
+import com.wilton.biblioteca.dtos.*;
 import com.wilton.biblioteca.model.Emprestimo;
+import com.wilton.biblioteca.model.Livro;
 import com.wilton.biblioteca.model.Usuario;
 import org.mapstruct.Mapper;
 
@@ -22,4 +20,6 @@ public interface UsuarioMapper {
 
 
     List<Object> toEmprestimoListResponse(List<Emprestimo> list);
+
+    DevolucaoResponseDto toDevolucaoResponseDto(Livro livro);
 }

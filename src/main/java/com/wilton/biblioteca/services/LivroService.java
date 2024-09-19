@@ -9,6 +9,7 @@ import com.wilton.biblioteca.repositorys.LivroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -37,10 +38,17 @@ public class LivroService {
 
     private List<Livro> verificarListaSeEstaVazia() {
         List<Livro> livros = repository.findAll();
+        List<Livro> livrosDisponiveis = new ArrayList<>();
+
         if (livros.isEmpty()) {
             throw new ExceptionPersonalizada("lista vazia", 404);
         } else {
-            return livros;
+            livros.forEach(l -> {
+                if (l.getQuantidade()>0){
+                   livrosDisponiveis.add(l);
+                }
+            } );
+            return livrosDisponiveis;
         }
     }
 

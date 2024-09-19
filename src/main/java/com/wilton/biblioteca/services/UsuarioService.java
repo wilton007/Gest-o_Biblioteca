@@ -2,6 +2,7 @@ package com.wilton.biblioteca.services;
 
 import com.wilton.biblioteca.dtos.*;
 import com.wilton.biblioteca.exception.ExceptionPersonalizada;
+import com.wilton.biblioteca.mappers.LivroMapper;
 import com.wilton.biblioteca.mappers.UsuarioMapper;
 import com.wilton.biblioteca.model.Emprestimo;
 import com.wilton.biblioteca.model.Livro;
@@ -26,6 +27,8 @@ public class UsuarioService {
     EmprestimoRepository emprestimoRepository;
     @Autowired
     UsuarioMapper mapper;
+    @Autowired
+    LivroMapper livroMapper;
 
     public UsuarioResponseDto salvarUsuario(UsuarioRequestDto requestDto) {
         verificarEmailExistente(requestDto.getEmail());
@@ -36,13 +39,29 @@ public class UsuarioService {
         return mapper.toListUsuarioResponseDto(verificarListaSeEstaVazia());
     }
 
+    public UsuarioResponseDto obterUsuario(long id) {
+        return mapper.toUsuarioResponseDto(verificarUsuarioExiste(id));
+    }
+
     public EmprestimoResponseDto pegarLivroEmprestado(EmprestimoRequestDto requestDto) {
 
-        Emprestimo emprestimo = new Emprestimo(verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn())
+        Emprestimo emprestimo = new Emprestimo(verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 1)
                 , verificarUsuarioExiste(requestDto.getId_Usuario()), LocalDate.now());
         emprestimoRepository.save(emprestimo);
         return mapper.toEmprestimoResponseDto(emprestimo);
     }
+
+    public DevolucaoResponseDto devolverLivro(DevolucaoRequestDto requestDto) {
+        DevolucaoResponseDto responseDto = new DevolucaoResponseDto();
+        Livro livro = verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 2);
+        responseDto.setLivro(livroMapper.toLivroResponseDto(livro));
+        responseDto.setUsuario(mapper.toUsuarioResponseDto(verificarUsuarioExiste(requestDto.getId_usuario())));
+        responseDto.setDataEmprestimo();
+
+
+        return mapper.toDevolucaoResponseDto(verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 2));
+    }
+
 
     public List<Object> listDeEmprestimosDoUsuario(EmprestimoListRequestDto requestDto) {
         Usuario usuario = verificarUsuarioExiste(requestDto.getId_usuario());
@@ -52,18 +71,26 @@ public class UsuarioService {
     }
 
 
-    private Livro verificarQuantidadeDeLivrosNaBilbioteca(long isbn) {
+    private Livro verificarQuantidadeDeLivrosNaBilbioteca(long isbn, int acao) {
         Livro livro = livroRepository.findById(isbn).orElse(null);
 
         if (livro != null) {
-            if (livro.getQuantidade() < 1) {
-                throw new ExceptionPersonalizada("livo em falta", 404);
+            if (acao == 1) {
+                if (livro.getQuantidade() < 1) {
+                    throw new ExceptionPersonalizada("livo em falta", 404);
+                } else {
+                    livro.setQuantidade(livro.getQuantidade() - 1);
+                    livroRepository.save(livro);
+                }
+                return livro;
             } else {
-                livro.setQuantidade(livro.getQuantidade() - 1);
+                livro.setQuantidade(livro.getQuantidade() + 1);
                 livroRepository.save(livro);
+                return livro;
             }
-            return livro;
+
         }
+
         throw new ExceptionPersonalizada("isbn não existente", 404);
     }
 
