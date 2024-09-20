@@ -6,5 +6,5 @@ import lombok.Data;
 public class DevolucaoRequestDto {
 
     private long id_usuario;
-    private long isbn;
+    private long id_emprestimo;
 }

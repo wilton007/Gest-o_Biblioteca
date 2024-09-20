@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -53,13 +54,17 @@ public class UsuarioService {
 
     public DevolucaoResponseDto devolverLivro(DevolucaoRequestDto requestDto) {
         DevolucaoResponseDto responseDto = new DevolucaoResponseDto();
-        Livro livro = verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 2);
+        Usuario usuario = verificarUsuarioExiste(requestDto.getId_usuario());
+        Emprestimo emprestimo = verificarExistenciaEmprestimo(usuario.getEmprestimos(), requestDto.getId_emprestimo());
+        Livro livro = verificarQuantidadeDeLivrosNaBilbioteca(emprestimo.getLivro().getIsbn(), 2);
         responseDto.setLivro(livroMapper.toLivroResponseDto(livro));
-        responseDto.setUsuario(mapper.toUsuarioResponseDto(verificarUsuarioExiste(requestDto.getId_usuario())));
-        responseDto.setDataEmprestimo();
+        responseDto.setUsuario(mapper.toUsuarioResponseDto(usuario));
+        responseDto.setDataEmprestimo(emprestimo.getDataEmprestimo());
+        responseDto.setDataDevolucao(LocalDate.now());
+        emprestimo.setDataDevolucao(LocalDate.now());
+        emprestimoRepository.save(emprestimo);
+        return responseDto;
 
-
-        return mapper.toDevolucaoResponseDto(verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 2));
     }
 
 
@@ -117,5 +122,14 @@ public class UsuarioService {
         } else {
             return list;
         }
+    }
+
+    private Emprestimo verificarExistenciaEmprestimo(List<Emprestimo> list, long id){
+        for (Emprestimo e: list){
+            if (e.getId() == id){
+                return e;
+            }
+        }
+        throw new ExceptionPersonalizada("Emprestimo inexistente", 404);
     }
 }
