@@ -32,7 +32,7 @@ public class UsuarioController extends BaseController{
     }
 
     @GetMapping("/lista_de_emprestimo")
-    public ResponseEntity<List<BaseResponseDto>> listaEmprestimoDoUsuario(@Valid @RequestBody EmprestimoListRequestDto requestDto){
-        return listSucess(service.listDeEmprestimosDoUsuario(requestDto));
+    public ResponseEntity<BaseResponseDto> listaEmprestimoDoUsuario(@Valid @RequestBody EmprestimoListRequestDto requestDto){
+        return sucess(service.listDeEmprestimosDoUsuario(requestDto));
     }
 }

@@ -8,6 +8,13 @@ import java.util.List;
 public class EmprestimoListResponseDto {
 
     private UsuarioResponseDto usuario;
-    private List<LivroResponseDto> livros;
+    private List<EmprestimoResponseDto> livros;
 
+    public EmprestimoListResponseDto(List<EmprestimoResponseDto> livros, UsuarioResponseDto usuario) {
+        this.livros = livros;
+        this.usuario = usuario;
+    }
+
+    public EmprestimoListResponseDto() {
+    }
 }
