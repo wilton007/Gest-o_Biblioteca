@@ -1,9 +1,6 @@
 package com.wilton.biblioteca.controllers;
 
-import com.wilton.biblioteca.dtos.BaseResponseDto;
-import com.wilton.biblioteca.dtos.EmprestimoListRequestDto;
-import com.wilton.biblioteca.dtos.EmprestimoRequestDto;
-import com.wilton.biblioteca.dtos.UsuarioRequestDto;
+import com.wilton.biblioteca.dtos.*;
 import com.wilton.biblioteca.services.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +26,10 @@ public class UsuarioController extends BaseController{
         return sucess(service.pegarLivroEmprestado(requestDto));
     }
 
-
+    @PostMapping("/devolver_emprestimo")
+    public ResponseEntity<BaseResponseDto> devolverLivro(@RequestBody DevolucaoRequestDto requestDto){
+        return sucess(service.devolverLivro(requestDto));
+    }
 
     @GetMapping("/lista_de_emprestimo")
     public ResponseEntity<List<BaseResponseDto>> listaEmprestimoDoUsuario(@Valid @RequestBody EmprestimoListRequestDto requestDto){
