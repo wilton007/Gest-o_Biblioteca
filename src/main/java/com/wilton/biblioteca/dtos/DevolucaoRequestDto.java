@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class DevolucaoRequestDto {
 
-    private long id_usuario;
-    private long id_emprestimo;
+    private long idUsuario;
+    private long idEmprestimo;
 }

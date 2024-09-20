@@ -45,17 +45,23 @@ public class UsuarioService {
     }
 
     public EmprestimoResponseDto pegarLivroEmprestado(EmprestimoRequestDto requestDto) {
+        EmprestimoListRequestDto emprestimoListRequestDto = new EmprestimoListRequestDto();
+        emprestimoListRequestDto.setIdUsuario(requestDto.getIdUsuario());
 
+
+        if (verificarQuantidadeEmprestimoUsuario(emprestimoListRequestDto, requestDto.getIsbn())){
         Emprestimo emprestimo = new Emprestimo(verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 1)
-                , verificarUsuarioExiste(requestDto.getId_Usuario()), LocalDate.now());
+                , verificarUsuarioExiste(requestDto.getIdUsuario()), LocalDate.now());
         emprestimoRepository.save(emprestimo);
         return mapper.toEmprestimoResponseDto(emprestimo);
+        }
+        return null;
     }
 
     public DevolucaoResponseDto devolverLivro(DevolucaoRequestDto requestDto) {
         DevolucaoResponseDto responseDto = new DevolucaoResponseDto();
-        Usuario usuario = verificarUsuarioExiste(requestDto.getId_usuario());
-        Emprestimo emprestimo = verificarExistenciaEmprestimo(usuario.getEmprestimos(), requestDto.getId_emprestimo());
+        Usuario usuario = verificarUsuarioExiste(requestDto.getIdUsuario());
+        Emprestimo emprestimo = verificarExistenciaEmprestimo(usuario.getEmprestimos(), requestDto.getIdEmprestimo());
         Livro livro = verificarQuantidadeDeLivrosNaBilbioteca(emprestimo.getLivro().getIsbn(), 2);
         responseDto.setLivro(livroMapper.toLivroResponseDto(livro));
         responseDto.setUsuario(mapper.toUsuarioResponseDto(usuario));
@@ -69,10 +75,36 @@ public class UsuarioService {
 
 
     public List<Object> listDeEmprestimosDoUsuario(EmprestimoListRequestDto requestDto) {
-        Usuario usuario = verificarUsuarioExiste(requestDto.getId_usuario());
-        List<Emprestimo> list = usuario.getEmprestimos();
+        Usuario usuario = verificarUsuarioExiste(requestDto.getIdUsuario());
+        List<Emprestimo> list = criarLIstaEmprestimo(usuario.getEmprestimos());
         return mapper.toEmprestimoListResponse(list);
 
+    }
+
+    private boolean verificarQuantidadeEmprestimoUsuario(EmprestimoListRequestDto requestDto, long isbn){
+        Usuario usuario = verificarUsuarioExiste(requestDto.getIdUsuario());
+        List<Emprestimo> emprestimosAtivos = criarLIstaEmprestimo(usuario.getEmprestimos());
+        for (Emprestimo e: emprestimosAtivos){
+            if (e.getLivro().getIsbn() == isbn){
+                throw new ExceptionPersonalizada("não permitido usuario fazer emprestimo repetido de uma mesma copia", 409);
+            }
+        }
+
+        if (emprestimosAtivos.size() == 3 ){
+            throw new ExceptionPersonalizada("O usuario não pode obter mais de 3 emprestimos simutaneos", 409);
+        }
+        return true;
+    }
+
+
+    private List<Emprestimo> criarLIstaEmprestimo(List<Emprestimo> list){
+        List<Emprestimo> emprestimosAtivos = new ArrayList<>();
+        for (Emprestimo e: list){
+            if (e.getDataDevolucao() == null){
+                emprestimosAtivos.add(e);
+            }
+        }
+        return emprestimosAtivos;
     }
 
 

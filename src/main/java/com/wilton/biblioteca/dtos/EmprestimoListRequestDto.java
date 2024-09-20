@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 public class EmprestimoListRequestDto {
     @NotNull
-    private long id_usuario;
+    private long idUsuario;
 }

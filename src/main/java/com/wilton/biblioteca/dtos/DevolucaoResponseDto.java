@@ -7,9 +7,9 @@ import java.time.LocalDate;
 @Data
 public class DevolucaoResponseDto {
 
-    private LivroResponseDto livro;
-    private UsuarioResponseDto usuario;
     private LocalDate dataEmprestimo;
     private LocalDate dataDevolucao;
+    private UsuarioResponseDto usuario;
+    private LivroResponseDto livro;
 
 }

@@ -9,4 +9,5 @@ public class EmprestimoListResponseDto {
 
     private UsuarioResponseDto usuario;
     private List<LivroResponseDto> livros;
+
 }

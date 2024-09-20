@@ -10,6 +10,6 @@ public class EmprestimoRequestDto {
     @NotNull
     private long isbn;
     @NotNull
-    private long id_Usuario;
+    private long idUsuario;
 
 }

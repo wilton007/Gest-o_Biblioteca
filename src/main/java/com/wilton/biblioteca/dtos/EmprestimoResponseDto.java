@@ -9,8 +9,8 @@ public class EmprestimoResponseDto {
 
 
     private long id;
-    private LivroResponseDto livro;
-    private UsuarioResponseDto usuario;
     private LocalDate dataEmprestimo;
+    private UsuarioResponseDto usuario;
+    private LivroResponseDto livro;
 
 }
