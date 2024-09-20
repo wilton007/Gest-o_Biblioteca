@@ -22,4 +22,5 @@ public interface UsuarioMapper {
     List<Object> toEmprestimoListResponse(List<Emprestimo> list);
 
 
+
 }
