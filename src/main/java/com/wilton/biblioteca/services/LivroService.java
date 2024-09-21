@@ -9,8 +9,8 @@ import com.wilton.biblioteca.repositorys.LivroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class LivroService {
@@ -21,7 +21,7 @@ public class LivroService {
     LivroMapper mapper;
 
     public LivroResponseDto cadastrarLivro(LivroRequestDto requestDto) {
-        verificarExistenciaIsbn(requestDto.getIsbn());
+        validarIsbnUnico(requestDto.getIsbn());
         return mapper.toLivroResponseDto(repository.save(mapper.toLivro(requestDto)));
     }
 
@@ -29,27 +29,21 @@ public class LivroService {
         return mapper.toListLivros(verificarListaSeEstaVazia());
     }
 
-
-    private void verificarExistenciaIsbn(long isbn) {
+    private void validarIsbnUnico(long isbn) {
         if (repository.existsById(isbn)) {
-            throw new ExceptionPersonalizada("ISBN Existent", 409);
+            throw new ExceptionPersonalizada("ISBN já cadastrado", 409);
         }
     }
 
     private List<Livro> verificarListaSeEstaVazia() {
         List<Livro> livros = repository.findAll();
-        List<Livro> livrosDisponiveis = new ArrayList<>();
 
         if (livros.isEmpty()) {
             throw new ExceptionPersonalizada("lista vazia", 404);
-        } else {
-            livros.forEach(l -> {
-                if (l.getQuantidade()>0){
-                   livrosDisponiveis.add(l);
-                }
-            } );
-            return livrosDisponiveis;
         }
+        return livros.stream()
+                .filter(l -> l.getQuantidade() > 0)
+                .collect(Collectors.toList());
     }
 
 }
