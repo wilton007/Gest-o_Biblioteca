@@ -49,24 +49,20 @@ public class UsuarioService {
     public EmprestimoResponseDto pegarLivroEmprestado(EmprestimoRequestDto requestDto) {
         EmprestimoListRequestDto emprestimoListRequestDto = new EmprestimoListRequestDto();
         emprestimoListRequestDto.setIdUsuario(requestDto.getIdUsuario());
+        verificarSeUsuarioPodePegarMaisLivros(emprestimoListRequestDto, requestDto.getIsbn());
+        Emprestimo emprestimo = new Emprestimo(verificarDisponibilidadeLivroNaBilbioteca(requestDto.getIsbn(), 1),
+                verificarUsuarioExiste(requestDto.getIdUsuario()), LocalDate.now());
+        return mapper.toEmprestimoResponseDto(emprestimoRepository.save(emprestimo));
 
-
-        if (verificarQuantidadeEmprestimoUsuario(emprestimoListRequestDto, requestDto.getIsbn())) {
-            Emprestimo emprestimo = new Emprestimo(verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 1),
-                    verificarUsuarioExiste(requestDto.getIdUsuario()), LocalDate.now());
-            emprestimoRepository.save(emprestimo);
-            return mapper.toEmprestimoResponseDto(emprestimo);
-        }
-        return null;
     }
 
     public DevolucaoResponseDto devolverLivro(DevolucaoRequestDto requestDto) {
         DevolucaoResponseDto responseDto = new DevolucaoResponseDto();
         Usuario usuario = verificarUsuarioExiste(requestDto.getIdUsuario());
         Emprestimo emprestimo = verificarExistenciaEmprestimo(usuario.getEmprestimos(), requestDto.getIdEmprestimo());
-        Livro livro = verificarQuantidadeDeLivrosNaBilbioteca(emprestimo.getLivro().getIsbn(), 2);
-        responseDto.setLivro(livroMapper.toLivroResponseDto(livro));
-        responseDto.setUsuario(mapper.toUsuarioResponseDto(usuario));
+        Livro livro = verificarDisponibilidadeLivroNaBilbioteca(emprestimo.getLivro().getIsbn(), 2);
+        responseDto.setIsbn(livro.getIsbn());
+        responseDto.setIdUsuario(usuario.getId());
         responseDto.setDataEmprestimo(emprestimo.getDataEmprestimo());
         responseDto.setDataDevolucao(LocalDate.now());
         emprestimo.setDataDevolucao(LocalDate.now());
@@ -79,11 +75,14 @@ public class UsuarioService {
     public Object listDeEmprestimosDoUsuario(EmprestimoListRequestDto requestDto) {
         Usuario usuario = verificarUsuarioExiste(requestDto.getIdUsuario());
         List<EmprestimoResponseDto> list = mapper.toListEmprestimoResponseDto(criarLIstaEmprestimo(usuario.getEmprestimos()));
-        return new EmprestimoListResponseDto(list, mapper.toUsuarioResponseDto(usuario));
+        if (list.isEmpty()) {
+            throw new ExceptionPersonalizada("esse usuario não tem emprestimos ativos", 404);
+        }
+        return new EmprestimoListResponseDto(list, usuario.getId());
 
     }
 
-    private boolean verificarQuantidadeEmprestimoUsuario(EmprestimoListRequestDto requestDto, long isbn) {
+    private void verificarSeUsuarioPodePegarMaisLivros(EmprestimoListRequestDto requestDto, long isbn) {
         Usuario usuario = verificarUsuarioExiste(requestDto.getIdUsuario());
         List<Emprestimo> emprestimosAtivos = criarLIstaEmprestimo(usuario.getEmprestimos());
         for (Emprestimo e : emprestimosAtivos) {
@@ -95,7 +94,6 @@ public class UsuarioService {
         if (emprestimosAtivos.size() == 3) {
             throw new ExceptionPersonalizada("O usuario não pode obter mais de 3 emprestimos simutaneos", 409);
         }
-        return true;
     }
 
 
@@ -110,7 +108,7 @@ public class UsuarioService {
     }
 
 
-    private Livro verificarQuantidadeDeLivrosNaBilbioteca(long isbn, int acao) {
+    private Livro verificarDisponibilidadeLivroNaBilbioteca(long isbn, int acao) {
         //ação 1 é pegar emprestado e ação 2 é devolver
         Livro livro = livroRepository.findById(isbn).orElseThrow(() ->
                 new ExceptionPersonalizada("isbn não existente", 404));
@@ -123,13 +121,14 @@ public class UsuarioService {
         } else {
             livro.setQuantidade(livro.getQuantidade() + 1);
         }
-        return  livroRepository.save(livro);
+        return livroRepository.save(livro);
 
     }
 
     private Usuario verificarUsuarioExiste(long id) {
         return repository.findById(id).orElseThrow(() -> new ExceptionPersonalizada("usuario não existente", 404));
     }
+
     private void verificarEmailExistente(String email) {
         if (repository.existsByEmail(email)) {
             throw new ExceptionPersonalizada("Email já cadastrado", 409);
@@ -148,10 +147,11 @@ public class UsuarioService {
 
     private Emprestimo verificarExistenciaEmprestimo(List<Emprestimo> list, long id) {
         for (Emprestimo e : list) {
-            if (e.getId() == id) {
+            if (e.getIdEmprestimo() == id) {
                 return e;
             }
         }
         throw new ExceptionPersonalizada("Emprestimo inexistente", 404);
     }
+
 }

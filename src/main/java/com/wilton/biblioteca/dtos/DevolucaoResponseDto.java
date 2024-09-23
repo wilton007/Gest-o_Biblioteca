@@ -9,7 +9,7 @@ public class DevolucaoResponseDto {
 
     private LocalDate dataEmprestimo;
     private LocalDate dataDevolucao;
-    private UsuarioResponseDto usuario;
-    private LivroResponseDto livro;
+    private long idUsuario;
+    private long isbn;
 
 }

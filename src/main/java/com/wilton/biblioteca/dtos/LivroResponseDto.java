@@ -9,7 +9,6 @@ public class LivroResponseDto {
     private String titulo;
     private String autor;
     private String genero;
-    private int quantidade;
-
+//    private int quantidade;
 
 }

@@ -7,12 +7,12 @@ import java.util.List;
 @Data
 public class EmprestimoListResponseDto {
 
-    private UsuarioResponseDto usuario;
+    private long idUsuario;
     private List<EmprestimoResponseDto> livros;
 
-    public EmprestimoListResponseDto(List<EmprestimoResponseDto> livros, UsuarioResponseDto usuario) {
+    public EmprestimoListResponseDto(List<EmprestimoResponseDto> livros, long idUsuario) {
         this.livros = livros;
-        this.usuario = usuario;
+        this.idUsuario = idUsuario;
     }
 
     public EmprestimoListResponseDto() {
