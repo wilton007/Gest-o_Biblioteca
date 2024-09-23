@@ -16,16 +16,16 @@ import java.util.stream.Collectors;
 public class LivroService {
 
     @Autowired
-    LivroRepository repository;
+    private LivroRepository repository;
     @Autowired
-    LivroMapper mapper;
+    private LivroMapper mapper;
 
     public LivroResponseDto cadastrarLivro(LivroRequestDto requestDto) {
         validarIsbnUnico(requestDto.getIsbn());
         return mapper.toLivroResponseDto(repository.save(mapper.toLivro(requestDto)));
     }
 
-    public List<Object> showAllBooks() {
+    public List<Object> mostrarTodosLivros() {
         return mapper.toListLivros(verificarListaSeEstaVazia());
     }
 

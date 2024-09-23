@@ -24,7 +24,7 @@ public class LivroController extends BaseController {
 
     @GetMapping("/all")
     public ResponseEntity<List<BaseResponseDto>> mostrarTodosLivros() {
-        return listSucess(service.showAllBooks());
+        return listSucess(service.mostrarTodosLivros());
     }
 
 }

@@ -21,15 +21,15 @@ import java.util.List;
 public class UsuarioService {
 
     @Autowired
-    UsuarioRepository repository;
+    private UsuarioRepository repository;
     @Autowired
-    LivroRepository livroRepository;
+    private LivroRepository livroRepository;
     @Autowired
-    EmprestimoRepository emprestimoRepository;
+    private EmprestimoRepository emprestimoRepository;
     @Autowired
-    UsuarioMapper mapper;
+    private UsuarioMapper mapper;
     @Autowired
-    LivroMapper livroMapper;
+    private LivroMapper livroMapper;
 
     public UsuarioResponseDto salvarUsuario(UsuarioRequestDto requestDto) {
         verificarEmailExistente(requestDto.getEmail());
@@ -52,8 +52,8 @@ public class UsuarioService {
 
 
         if (verificarQuantidadeEmprestimoUsuario(emprestimoListRequestDto, requestDto.getIsbn())) {
-            Emprestimo emprestimo = new Emprestimo(verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 1)
-                    , verificarUsuarioExiste(requestDto.getIdUsuario()), LocalDate.now());
+            Emprestimo emprestimo = new Emprestimo(verificarQuantidadeDeLivrosNaBilbioteca(requestDto.getIsbn(), 1),
+                    verificarUsuarioExiste(requestDto.getIdUsuario()), LocalDate.now());
             emprestimoRepository.save(emprestimo);
             return mapper.toEmprestimoResponseDto(emprestimo);
         }
@@ -112,32 +112,24 @@ public class UsuarioService {
 
     private Livro verificarQuantidadeDeLivrosNaBilbioteca(long isbn, int acao) {
         //ação 1 é pegar emprestado e ação 2 é devolver
-        Livro livro = livroRepository.findById(isbn).orElse(null);
+        Livro livro = livroRepository.findById(isbn).orElseThrow(() ->
+                new ExceptionPersonalizada("isbn não existente", 404));
 
-        if (livro != null) {
-            if (acao == 1) {
-                if (livro.getQuantidade() < 1) {
-                    throw new ExceptionPersonalizada("livro em falta", 404);
-                } else {
-                    livro.setQuantidade(livro.getQuantidade() - 1);
-                    livroRepository.save(livro);
-                }
-            } else {
-                livro.setQuantidade(livro.getQuantidade() + 1);
-                livroRepository.save(livro);
+        if (acao == 1) {
+            if (livro.getQuantidade() < 1) {
+                throw new ExceptionPersonalizada("livro em falta", 404);
             }
-            return livro;
-
+            livro.setQuantidade(livro.getQuantidade() - 1);
+        } else {
+            livro.setQuantidade(livro.getQuantidade() + 1);
         }
+        return  livroRepository.save(livro);
 
-        throw new ExceptionPersonalizada("isbn não existente", 404);
     }
 
     private Usuario verificarUsuarioExiste(long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ExceptionPersonalizada("usuario não existente", 404));
+        return repository.findById(id).orElseThrow(() -> new ExceptionPersonalizada("usuario não existente", 404));
     }
-
     private void verificarEmailExistente(String email) {
         if (repository.existsByEmail(email)) {
             throw new ExceptionPersonalizada("Email já cadastrado", 409);
