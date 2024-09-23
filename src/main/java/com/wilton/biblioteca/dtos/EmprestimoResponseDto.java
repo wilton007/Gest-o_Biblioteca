@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public class EmprestimoResponseDto {
 
 
-    private long id;
+    private long idEmprestimo;
     private LocalDate dataEmprestimo;
     private LivroResponseDto livro;
 

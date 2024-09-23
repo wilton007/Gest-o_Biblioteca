@@ -35,4 +35,5 @@ public class UsuarioController extends BaseController{
     public ResponseEntity<BaseResponseDto> listaEmprestimoDoUsuario(@Valid @RequestBody EmprestimoListRequestDto requestDto){
         return sucess(service.listDeEmprestimosDoUsuario(requestDto));
     }
+
 }
