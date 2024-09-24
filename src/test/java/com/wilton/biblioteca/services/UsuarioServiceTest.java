@@ -1,9 +1,6 @@
 package com.wilton.biblioteca.services;
 
-import com.wilton.biblioteca.dtos.EmprestimoRequestDto;
-import com.wilton.biblioteca.dtos.EmprestimoResponseDto;
-import com.wilton.biblioteca.dtos.UsuarioRequestDto;
-import com.wilton.biblioteca.dtos.UsuarioResponseDto;
+import com.wilton.biblioteca.dtos.*;
 import com.wilton.biblioteca.exception.ExceptionPersonalizada;
 import com.wilton.biblioteca.mappers.UsuarioMapper;
 import com.wilton.biblioteca.model.Emprestimo;
@@ -18,6 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -101,7 +100,7 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void pegarLivroEmprestadoErroNaoFazerEmprestimoRepetido(){
+    void pegarLivroEmprestadoErroNaoFazerEmprestimoRepetido() {
         ExceptionPersonalizada exception = assertThrows(ExceptionPersonalizada.class, this::pegarEmprestimoErroRepetido);
 
         assertNotNull(exception);
@@ -110,7 +109,7 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void pegarLivroEmprestadoErroNaoFazerEmprestimoMaisDeTresLivros(){
+    void pegarLivroEmprestadoErroNaoFazerEmprestimoMaisDeTresLivros() {
         ExceptionPersonalizada exception = assertThrows(ExceptionPersonalizada.class, this::pegarEmprestimoErroMaisDeTresLivros);
 
         assertNotNull(exception);
@@ -119,7 +118,7 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void pegarLivroEmprestadoErroIsbnNaoExistente(){
+    void pegarLivroEmprestadoErroIsbnNaoExistente() {
         ExceptionPersonalizada exception = assertThrows(ExceptionPersonalizada.class, this::pegarEmprestimoErroIsbnNaoExistent);
 
         assertNotNull(exception);
@@ -128,12 +127,48 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void pegarLivroEmprestadoErroLivroEmFalta(){
+    void pegarLivroEmprestadoErroLivroEmFalta() {
         ExceptionPersonalizada exception = assertThrows(ExceptionPersonalizada.class, this::pegarEmprestimoErroLivroEmFalta);
 
         assertNotNull(exception);
         assertEquals("livro em falta", exception.getErros().get("mensagem"));
         assertEquals(404, exception.getStatus().value());
+    }
+
+    @Test
+    void devolverLivroSucesso() {
+        DevolucaoResponseDto responseDto = devolverLivroComSucesso();
+
+        assertNotNull(responseDto);
+        assertEquals(1, responseDto.getIdUsuario());
+        assertEquals(1001, responseDto.getIsbn());
+        verify(repository, times(1)).findById(1L);
+
+    }
+
+    @Test
+    void devolverLivroErroEmprestimoNaoExiste() {
+        ExceptionPersonalizada exception = assertThrows(ExceptionPersonalizada.class, this::devolverLivroErroEmprestimoInexistente);
+
+        assertNotNull(exception);
+        assertEquals("Emprestimo inexistente", exception.getErros().get("mensagem"));
+        assertEquals(404, exception.getStatus().value());
+    }
+
+    @Test
+    void listDeEmprestimosDoUsuarioSucesso() {
+        Object object = listDeEmprestimoSucess();
+
+        assertNotNull(object);
+    }
+
+    @Test
+    void listDeEmprestimosDoUsuarioErro() {
+       ExceptionPersonalizada exception = assertThrows(ExceptionPersonalizada.class, this::listDeEmprestimoErro);
+
+       assertNotNull(exception);
+       assertEquals("esse usuario não tem emprestimos ativos", exception.getErros().get("mensagem"));
+       assertEquals(404, exception.getStatus().value());
     }
 
 
@@ -143,7 +178,7 @@ class UsuarioServiceTest {
         service.salvarUsuario(requestDto);
     }
 
-    private void pegarEmprestimoErroRepetido(){
+    private void pegarEmprestimoErroRepetido() {
         EmprestimoRequestDto requestDto = new EmprestimoRequestDto();
         requestDto.setIdUsuario(1L);
         requestDto.setIsbn(1001L);
@@ -161,7 +196,7 @@ class UsuarioServiceTest {
         service.pegarLivroEmprestado(requestDto);
     }
 
-    private void pegarEmprestimoErroMaisDeTresLivros(){
+    private void pegarEmprestimoErroMaisDeTresLivros() {
         EmprestimoRequestDto requestDto = new EmprestimoRequestDto();
         requestDto.setIdUsuario(1L);
         requestDto.setIsbn(1000L);
@@ -186,14 +221,14 @@ class UsuarioServiceTest {
         Emprestimo emprestimo3 = new Emprestimo();
         emprestimo3.setLivro(livro3);
 
-        List<Emprestimo> emprestimosList = List.of(emprestimo,emprestimo2,emprestimo3);
+        List<Emprestimo> emprestimosList = List.of(emprestimo, emprestimo2, emprestimo3);
         usuario.setEmprestimos(emprestimosList);
 
         when(repository.findById(1L)).thenReturn(Optional.of(usuario));
         service.pegarLivroEmprestado(requestDto);
     }
 
-    private void pegarEmprestimoErroIsbnNaoExistent(){
+    private void pegarEmprestimoErroIsbnNaoExistent() {
         EmprestimoRequestDto requestDto = new EmprestimoRequestDto();
         requestDto.setIdUsuario(1L);
         requestDto.setIsbn(1001L);
@@ -212,7 +247,7 @@ class UsuarioServiceTest {
         service.pegarLivroEmprestado(requestDto);
     }
 
-    private void pegarEmprestimoErroLivroEmFalta(){
+    private void pegarEmprestimoErroLivroEmFalta() {
         EmprestimoRequestDto requestDto = new EmprestimoRequestDto();
         requestDto.setIdUsuario(1L);
         requestDto.setIsbn(1001L);
@@ -229,6 +264,100 @@ class UsuarioServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(usuario));
         when(livroRepository.findById(requestDto.getIsbn())).thenReturn(Optional.of(livro));
         service.pegarLivroEmprestado(requestDto);
+    }
+
+    private DevolucaoResponseDto devolverLivroComSucesso() {
+        DevolucaoRequestDto requestDto = new DevolucaoRequestDto();
+        requestDto.setIdUsuario(1L);
+        requestDto.setIdEmprestimo(1L);
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        Livro livro = new Livro();
+        livro.setQuantidade(10);
+        livro.setIsbn(1001L);
+        Emprestimo emprestimo = new Emprestimo();
+        emprestimo.setIdEmprestimo(1L);
+        emprestimo.setDataEmprestimo(LocalDate.now());
+        emprestimo.setLivro(livro);
+        List<Emprestimo> emprestimosList = List.of(emprestimo);
+        usuario.setEmprestimos(emprestimosList);
+
+
+        when(repository.findById(requestDto.getIdUsuario())).thenReturn(Optional.of(usuario));
+        when(livroRepository.findById(livro.getIsbn())).thenReturn(Optional.of(livro));
+        when(livroRepository.save(livro)).thenReturn(livro);
+        when(emprestimoRepository.save(emprestimo)).thenReturn(emprestimo);
+
+
+        return service.devolverLivro(requestDto);
+    }
+
+    private void devolverLivroErroEmprestimoInexistente() {
+        DevolucaoRequestDto requestDto = new DevolucaoRequestDto();
+        requestDto.setIdUsuario(1L);
+        requestDto.setIdEmprestimo(2L);
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        Livro livro = new Livro();
+        livro.setQuantidade(10);
+        livro.setIsbn(1001L);
+        Emprestimo emprestimo = new Emprestimo();
+        emprestimo.setIdEmprestimo(1L);
+        emprestimo.setDataEmprestimo(LocalDate.now());
+        emprestimo.setLivro(livro);
+        List<Emprestimo> emprestimosList = List.of(emprestimo);
+        usuario.setEmprestimos(emprestimosList);
+
+        when(repository.findById(requestDto.getIdUsuario())).thenReturn(Optional.of(usuario));
+
+        service.devolverLivro(requestDto);
+    }
+
+    private Object listDeEmprestimoSucess() {
+        EmprestimoListRequestDto requestDto = new EmprestimoListRequestDto();
+        requestDto.setIdUsuario(1L);
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        Livro livro = new Livro();
+        livro.setQuantidade(10);
+        livro.setIsbn(1001L);
+        Emprestimo emprestimo = new Emprestimo();
+        emprestimo.setIdEmprestimo(1L);
+        emprestimo.setDataEmprestimo(LocalDate.now());
+        emprestimo.setLivro(livro);
+        List<Emprestimo> emprestimosList = List.of(emprestimo);
+        usuario.setEmprestimos(emprestimosList);
+        List<EmprestimoResponseDto> listEmprestimoResponse = new ArrayList<>();
+        EmprestimoResponseDto emprestimoResponseDto = new EmprestimoResponseDto();
+        listEmprestimoResponse.add(emprestimoResponseDto);
+
+        when(repository.findById(requestDto.getIdUsuario())).thenReturn(Optional.of(usuario));
+        when(mapper.toListEmprestimoResponseDto(emprestimosList)).thenReturn(listEmprestimoResponse);
+
+        return service.listDeEmprestimosDoUsuario(requestDto);
+    }
+
+    private void listDeEmprestimoErro() {
+        EmprestimoListRequestDto requestDto = new EmprestimoListRequestDto();
+        requestDto.setIdUsuario(1L);
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        Livro livro = new Livro();
+        livro.setQuantidade(10);
+        livro.setIsbn(1001L);
+        Emprestimo emprestimo = new Emprestimo();
+        emprestimo.setIdEmprestimo(1L);
+        emprestimo.setDataEmprestimo(LocalDate.now());
+        emprestimo.setLivro(livro);
+        List<Emprestimo> emprestimosList = List.of(emprestimo);
+        usuario.setEmprestimos(emprestimosList);
+        List<EmprestimoResponseDto> listEmprestimoResponse = new ArrayList<>();
+
+
+        when(repository.findById(requestDto.getIdUsuario())).thenReturn(Optional.of(usuario));
+        when(mapper.toListEmprestimoResponseDto(emprestimosList)).thenReturn(listEmprestimoResponse);
+
+        service.listDeEmprestimosDoUsuario(requestDto);
     }
 
 }
